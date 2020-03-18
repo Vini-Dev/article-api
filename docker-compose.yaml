@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  mongo:
+    container_name: article_db
+    image: mongo
+    ports:
+      - "27017:${DB_PORT}"
+    networks:
+      - mongo
+    env_file:
+      - .env
+    restart: always
+  app:
+    container_name: "article_api"
+    build: .
+    command: npm start
+    ports:
+      - "4000:${APP_PORT}"
+    volumes:
+      - .:/usr/app
+      - /usr/app/node_modules
+    networks:
+      - mongo
+    env_file:
+      - .env
+    restart: always
+
+networks:
+  mongo:
+    driver: bridge
