@@ -3,13 +3,12 @@ import authConfig from '../../config/auth';
 
 class SessionController {
   async store(req, res) {
+    const { login, password } = req.body;
 
-    const {login, password } = req.body;
-
-    if(login !== 'admin' || password !== '123456') {
+    if (login !== 'admin' || password !== '123456') {
       res.status(401).json({
         message: 'Login ou senha inválidos',
-      })
+      });
     }
 
     return res.json({

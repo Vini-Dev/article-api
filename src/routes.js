@@ -1,16 +1,16 @@
 import { Router } from 'express';
 
-import SessionController from './app/Controllers/SessionController';
-import authMiddleware from './App/Middlewares/authMiddleware';
+import SessionController from './app/controllers/SessionController';
+import authMiddleware from './app/middlewares/authMiddleware';
 
 const router = new Router();
 
 // sessions
 router.post('/sessions', SessionController.store);
 
-router.use(authMiddleware)
+router.use(authMiddleware);
 
-router.get('/' ,  (req, res) => {
+router.get('/', (req, res) => {
   return res.json({ run: true });
 });
 
