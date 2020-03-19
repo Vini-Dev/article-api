@@ -11,13 +11,16 @@ export default async (req, res, next) => {
 
   const [, token] = authHeader.split(' ');
   try {
-    const userIdDecoded = await promisify(jwt.verify)(token, authConfig.secret);
+    const tokenDecoded = await promisify(jwt.verify)(token, authConfig.secret);
 
-    if (!userIdDecoded) {
-      return res.status(401).json({ error: 'Create token error' });
+    if (!tokenDecoded) {
+      return res.status(401).json({ error: 'Decoded token error' });
     }
 
-    req.userId = userIdDecoded.id;
+    req.body = {
+      ...req.body,
+      user_id: tokenDecoded.id,
+    };
 
     return next();
   } catch (error) {
