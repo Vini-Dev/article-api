@@ -1,8 +1,7 @@
 import server from './App';
 
-const port = process.env.APP_PORT;
-const host = '0.0.0.0';
+const { APP_HOST, APP_PORT } = process.env;
 
-server.listen(port, host, () => {
-  console.log(`Server is running on Url: ${host}/${port}`);
+server.listen(APP_PORT, APP_HOST, () => {
+  console.log(`Server is running on Url: ${APP_HOST}/${APP_PORT}`);
 });

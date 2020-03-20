@@ -9,13 +9,18 @@ First, create an .env file in the root path and then write the following keys.
 ### Example
 
 ```
-APP_PORT=80
+APP_HOST=0.0.0.0
+APP_PORT=4000
+APP_URL=http://localhost:4000
 
-DB_PORT=27017
-DB_NAME=dbname
+MONGO_CONTAINER=article_db
+MONGO_USERNAME=
+MONGO_PASSWORD=
+MONGO_PORT=27017
+MONGO_DB=
 
-SESSION_KEY=sessionkey
-SESSION_LIFETIME=7d
+SESSION_KEY=3f98c7eab26d9e2d775483e40e918455
+SESSION_LIFETIME=1d
 ```
 
 ## Docker containers
@@ -30,47 +35,38 @@ services:
   mongo:
     container_name: article_db
     image: mongo
-    ports:
-      - "27017:${DB_PORT}"
     networks:
       - mongo
     env_file:
       - .env
+    environment:
+      - MONGO_PORT=$MONGO_PORT
+      - MONGO_DB=$MONGO_DB
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD
+
     restart: always
   app:
+    image: node:12.16.1
     container_name: "article_api"
-    build: .
-    command: npm start
-    ports:
-      - "4000:${APP_PORT}"
+    working_dir: /home/node/app
     volumes:
-      - .:/usr/app
+      - ./:/home/node/app
+      - /home/node/app/node_modules
     networks:
       - mongo
     env_file:
       - .env
+    ports:
+      - $APP_PORT:4000
+    depends_on:
+      - mongo
     restart: always
+    command: bash -c "yarn && yarn start"
 
 networks:
   mongo:
     driver: bridge
-```
-
-Create an Dockerfile, no need extension
-
-```dockerfile
-FROM node:12.16.1
-
-WORKDIR /usr/app
-
-COPY package.json yarn.lock
-RUN yarn
-
-COPY . .
-
-EXPOSE 4000
-
-CMD ["yarn", "start"]
 ```
 
 In root path run

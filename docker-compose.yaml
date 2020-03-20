@@ -4,27 +4,34 @@ services:
   mongo:
     container_name: article_db
     image: mongo
-    ports:
-      - "27017:${DB_PORT}"
     networks:
       - mongo
     env_file:
       - .env
+    environment:
+      - MONGO_PORT=$MONGO_PORT
+      - MONGO_DB=$MONGO_DB
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD
+
     restart: always
   app:
+    image: node:12.16.1
     container_name: "article_api"
-    build: .
-    command: npm start
-    ports:
-      - "4000:${APP_PORT}"
+    working_dir: /home/node/app
     volumes:
-      - .:/usr/app
-      - /usr/app/node_modules
+      - ./:/home/node/app
+      - /home/node/app/node_modules
     networks:
       - mongo
     env_file:
       - .env
+    ports:
+      - $APP_PORT:4000
+    depends_on:
+      - mongo
     restart: always
+    command: bash -c "yarn && yarn start"
 
 networks:
   mongo:
