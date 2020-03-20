@@ -31,7 +31,7 @@ services:
     depends_on:
       - mongo
     restart: always
-    command: bash -c "yarn && yarn start"
+    command: bash -c "chown -R node:node /home/node/app/tmp  && yarn && yarn start"
 
 networks:
   mongo:

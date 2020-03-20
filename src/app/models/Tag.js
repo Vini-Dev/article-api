@@ -1,15 +1,7 @@
 import mongoose from 'mongoose';
 
-const ArticleSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  cover: String,
-  tags: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Tag',
-    },
-  ],
+const TagSchema = new mongoose.Schema({
+  name: String,
   filed: {
     type: Boolean,
     default: false,
@@ -26,4 +18,4 @@ const ArticleSchema = new mongoose.Schema({
   updated_by: Number,
 });
 
-export default mongoose.model('Article', ArticleSchema);
+export default mongoose.model('Tag', TagSchema);

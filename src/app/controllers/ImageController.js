@@ -3,13 +3,26 @@ import path from 'path';
 
 class ImageController {
   async index(req, res) {
-    const { image } = req.param;
+    const { fileName } = req.params;
+    const relativePath = path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'tmp',
+      'uploads',
+      fileName
+    );
 
-    return fs
-      .createReadStream(
-        path.resolve(__dirname, '..', '..', 'tmp', 'uploads', image)
-      )
-      .pipe(res);
+    const readStream = fs.createReadStream(relativePath);
+
+    readStream.on('open', () => {
+      readStream.pipe(res);
+    });
+
+    readStream.on('error', () => {
+      res.status(404).end();
+    });
   }
 }
 

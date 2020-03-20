@@ -1,15 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-import Article from '../models/Article';
+import Tag from '../models/Tag';
 import yup from '../lib/yup';
 
-/**
- * FIXME:
- * - Validar somente o ID e verificar se ele existe antes de validar o
- * restante dos parâmetros enviados
- */
-class ArticleController {
+class TagController {
   async index(req, res) {
     const { id } = req.params;
 
@@ -31,7 +23,7 @@ class ArticleController {
       );
 
       // Verifica se o id existe
-      const response = await Article.findById({ _id: id });
+      const response = await Tag.findById({ _id: id });
 
       if (!response)
         res.status(400).json({ errors: { id: 'id não encontrado' } });
@@ -78,22 +70,15 @@ class ArticleController {
       const limit = perPage ? Number(perPage) : 10;
       const skip = (Number(page) - 1) * limit;
 
-      const data = await Article.find({
+      const data = await Tag.find({
         filed: false,
       })
         .skip(skip)
-        .limit(limit)
-        .populate('tags');
+        .limit(limit);
 
-      const totalSize = await Article.countDocuments({
+      const totalSize = await Tag.countDocuments({
         filed: false,
       });
-
-      // Ajustando url da imagem
-      data.map(d => ({
-        ...d,
-        cover_path_url: `${process.env.APP_URL}/image/${d.cover}`,
-      }));
 
       return res.json({ page: Number(page), perPage: limit, totalSize, data });
     } catch (err) {
@@ -111,78 +96,22 @@ class ArticleController {
   }
 
   async store(req, res) {
-    const cover = req.files ? req.files.cover : {};
-    const { title, content, tags } = req.body;
+    const { name } = req.body;
 
     try {
       // Validação
       const schema = yup.object().shape({
-        title: yup
-          .string()
-          .min(5)
-          .required()
-          .label('Título'),
-        content: yup
-          .string()
-          .min(5)
-          .required()
-          .label('Conteúdo'),
-        tags: yup
-          .array()
-          .of(yup.string().length(24))
-          .label('Tags'),
         name: yup
           .string()
+          .min(1)
           .required()
-          .label('Capa'),
-        mimetype: yup
-          .string()
-          .test(value => {
-            const allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png'];
-
-            if (allowedMimes.includes(value)) return true;
-
-            return false;
-          })
-          .required()
-          .label('Tipo'),
-        size: yup
-          .number()
-          .max(1048576, 'O tamanho máximo é de 1 mb')
-          .required()
-          .label('Tamanho'),
+          .label('Nome'),
       });
 
-      const parsedTags = tags ? JSON.parse(tags) : [];
+      await schema.validate({ name });
 
-      await schema.validate(
-        { title, content, parsedTags, ...cover },
-        {
-          abortEarly: false,
-        }
-      );
-
-      // Cria uma hash para previnir imagens com nomes iguais
-      const buf = crypto.randomBytes(16);
-      const newNameImage = `${buf.toString('hex')}-${cover.name}`;
-
-      cover.mv(
-        path.resolve(
-          __dirname,
-          '..',
-          '..',
-          '..',
-          'tmp',
-          'uploads',
-          newNameImage
-        )
-      );
-
-      const response = await Article.create({
-        title,
-        content,
-        cover: newNameImage,
-        tags: parsedTags,
+      const response = await Tag.create({
+        name,
         created_by: req.body.user_id,
         updated_by: req.body.user_id,
       });
@@ -204,8 +133,7 @@ class ArticleController {
   }
 
   async update(req, res) {
-    const cover = req.files ? req.files.cover : {};
-    const { _id, title, content } = req.body;
+    const { _id, name } = req.body;
 
     try {
       // Validação
@@ -215,81 +143,31 @@ class ArticleController {
           .length(24)
           .required()
           .label('id'),
-        title: yup
+        name: yup
           .string()
-          .min(5)
+          .min(1)
           .required()
-          .label('Título'),
-        content: yup
-          .string()
-          .min(5)
-          .required()
-          .label('Conteúdo'),
-        name: yup.string().label('Capa'),
-        mimetype: yup
-          .string()
-          .test(value => {
-            if (!value) return true;
-
-            const allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png'];
-
-            if (allowedMimes.includes(value)) return true;
-
-            return false;
-          })
-          .label('Tipo'),
-        size: yup
-          .number()
-          .max(1048576, 'O tamanho máximo é de 1 mb')
-          .label('Tamanho'),
+          .label('Nome'),
       });
 
       await schema.validate(
-        { _id, title, content, ...cover },
+        { _id, name },
         {
           abortEarly: false,
         }
       );
 
       // Verifica se o id existe
-      const check = await Article.findById({ _id });
+      const check = await Tag.findById({ _id });
 
       if (!check) res.status(400).json({ errors: { id: 'id não encontrado' } });
 
-      let imageName = check.cover;
-
-      if (req.files) {
-        fs.unlinkSync(
-          path.resolve(
-            __dirname,
-            '..',
-            '..',
-            '..',
-            'tmp',
-            'uploads',
-            check.cover
-          )
-        );
-
-        console.log(check.cover);
-        // Cria uma hash para previnir imagens com nomes iguais
-        const buf = crypto.randomBytes(16);
-
-        imageName = `${buf.toString('hex')}-${cover.name}`;
-
-        cover.mv(
-          path.resolve(__dirname, '..', '..', '..', 'tmp', 'uploads', imageName)
-        );
-      }
-
       // Atualiza para arquivado
-      const response = await Article.findByIdAndUpdate(
+      const response = await Tag.findByIdAndUpdate(
         { _id },
         {
           $set: {
-            title,
-            content,
-            cover: imageName,
+            name,
             updated_at: Date.now(),
             updated_by: req.body.user_id,
           },
@@ -331,12 +209,12 @@ class ArticleController {
       );
 
       // Verifica se o id existe
-      const check = await Article.findById({ _id: id });
+      const check = await Tag.findById({ _id: id });
 
       if (!check) res.status(400).json({ errors: { id: 'id não encontrado' } });
 
       // Atualiza para arquivado
-      const response = await Article.updateOne(
+      const response = await Tag.findByIdAndUpdate(
         { _id: id },
         {
           $set: {
@@ -362,4 +240,4 @@ class ArticleController {
   }
 }
 
-export default new ArticleController();
+export default new TagController();
