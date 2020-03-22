@@ -32,7 +32,7 @@ class TagController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -40,7 +40,7 @@ class TagController {
       }
     }
 
-    return res.status(500).json({});
+    return res.status(500).json({ errors: 'Erro interno' });
   }
 
   async list(req, res) {
@@ -84,7 +84,7 @@ class TagController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -92,7 +92,7 @@ class TagController {
       }
     }
 
-    return res.status(500).json({});
+    return res.status(500).json({ errors: 'Erro interno' });
   }
 
   async store(req, res) {
@@ -120,7 +120,7 @@ class TagController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         console.log(err);
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
@@ -129,7 +129,7 @@ class TagController {
       }
     }
 
-    return res.status(500).json({});
+    return res.status(500).json({ errors: 'Erro interno' });
   }
 
   async update(req, res) {
@@ -168,7 +168,7 @@ class TagController {
         {
           $set: {
             name,
-            updated_at: Date.now(),
+            updated_at: new Date(),
             updated_by: req.body.user_id,
           },
         }
@@ -177,7 +177,7 @@ class TagController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -185,7 +185,7 @@ class TagController {
       }
     }
 
-    return res.status(500).json({});
+    return res.status(500).json({ errors: 'Erro interno' });
   }
 
   async delete(req, res) {
@@ -214,21 +214,12 @@ class TagController {
       if (!check) res.status(400).json({ errors: { id: 'id não encontrado' } });
 
       // Atualiza para arquivado
-      const response = await Tag.findByIdAndUpdate(
-        { _id: id },
-        {
-          $set: {
-            filed: true,
-            updated_at: Date.now(),
-            updated_by: req.body.user_id,
-          },
-        }
-      );
+      const response = await Tag.findByIdAndRemove({ _id: id });
       return res.json({ data: response });
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -236,7 +227,7 @@ class TagController {
       }
     }
 
-    return res.status(500).json({});
+    return res.status(500).json({ errors: 'Erro interno' });
   }
 }
 

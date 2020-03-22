@@ -14,6 +14,7 @@ const mongo = async () => {
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        useFindAndModify: false,
       }
     )
     .then(() => console.log('MongoDB connected'))

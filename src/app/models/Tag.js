@@ -8,12 +8,12 @@ const TagSchema = new mongoose.Schema({
   },
   created_at: {
     type: Date,
-    default: Date.now(),
+    default: new Date(),
   },
   created_by: Number,
   updated_at: {
     type: Date,
-    default: Date.now(),
+    default: new Date(),
   },
   updated_by: Number,
 });

@@ -40,7 +40,7 @@ class ArticleController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -89,17 +89,16 @@ class ArticleController {
         filed: false,
       });
 
-      // Ajustando url da imagem
-      data.map(d => ({
-        ...d,
-        cover_path_url: `${process.env.APP_URL}/image/${d.cover}`,
-      }));
-
-      return res.json({ page: Number(page), perPage: limit, totalSize, data });
+      return res.json({
+        page: Number(page),
+        perPage: limit,
+        totalSize,
+        data,
+      });
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -191,7 +190,7 @@ class ArticleController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         console.log(err);
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
@@ -205,7 +204,7 @@ class ArticleController {
 
   async update(req, res) {
     const cover = req.files ? req.files.cover : {};
-    const { _id, title, content } = req.body;
+    const { _id, title, content, tags } = req.body;
 
     try {
       // Validação
@@ -225,6 +224,10 @@ class ArticleController {
           .min(5)
           .required()
           .label('Conteúdo'),
+        tags: yup
+          .array()
+          .of(yup.string().length(24))
+          .label('Tags'),
         name: yup.string().label('Capa'),
         mimetype: yup
           .string()
@@ -244,8 +247,10 @@ class ArticleController {
           .label('Tamanho'),
       });
 
+      const parsedTags = tags ? JSON.parse(tags) : [];
+
       await schema.validate(
-        { _id, title, content, ...cover },
+        { _id, title, tags: parsedTags, content, ...cover },
         {
           abortEarly: false,
         }
@@ -290,7 +295,8 @@ class ArticleController {
             title,
             content,
             cover: imageName,
-            updated_at: Date.now(),
+            tags: parsedTags,
+            updated_at: new Date(),
             updated_by: req.body.user_id,
           },
         }
@@ -299,7 +305,7 @@ class ArticleController {
     } catch (err) {
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
@@ -336,21 +342,18 @@ class ArticleController {
       if (!check) res.status(400).json({ errors: { id: 'id não encontrado' } });
 
       // Atualiza para arquivado
-      const response = await Article.updateOne(
-        { _id: id },
-        {
-          $set: {
-            filed: true,
-            updated_at: Date.now(),
-            updated_by: req.body.user_id,
-          },
-        }
+      const response = await Article.findByIdAndRemove({ _id: id });
+
+      fs.unlinkSync(
+        path.resolve(__dirname, '..', '..', '..', 'tmp', 'uploads', check.cover)
       );
+
       return res.json({ data: response });
     } catch (err) {
+      console.error(err);
       // Caso ocorrer algum erro, cria um array de mensagens
       const validationErrors = {};
-      if (err) {
+      if (err.inner) {
         err.inner.forEach(error => {
           validationErrors[error.path] = error.message;
         });
