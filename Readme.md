@@ -23,6 +23,10 @@ SESSION_KEY=3f98c7eab26d9e2d775483e40e918455
 SESSION_LIFETIME=1d
 ```
 
+## Create TMP for image uploads
+
+In root path, create a directory tmp, inside tm create uploads
+
 ## Docker containers
 
 Now I’m going to teach you how to set up the docker containers, it’s very simple. Create a docker-compose.yaml file and then type the following.
@@ -33,7 +37,7 @@ version: "3"
 
 services:
   mongo:
-    container_name: article_db
+    container_name: $MONGO_CONTAINER
     image: mongo
     networks:
       - mongo
@@ -48,7 +52,7 @@ services:
     restart: always
   app:
     image: node:12.16.1
-    container_name: "article_api"
+    container_name: article_api
     working_dir: /home/node/app
     volumes:
       - ./:/home/node/app
@@ -62,7 +66,7 @@ services:
     depends_on:
       - mongo
     restart: always
-    command: bash -c "yarn && yarn start"
+    command: bash -c "chown -R node:node /home/node/app/tmp  && yarn && yarn start"
 
 networks:
   mongo:
@@ -75,4 +79,4 @@ In root path run
 docker-compose -f "docker-compose.yaml" up -d --build
 ```
 
-Test in http://localhost:0000 (replace 0000 with your port)
+Test in http://localhost:4000 (replace 4000 with your port)

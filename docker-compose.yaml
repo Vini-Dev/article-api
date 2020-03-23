@@ -2,7 +2,7 @@ version: "3"
 
 services:
   mongo:
-    container_name: article_db
+    container_name: $MONGO_CONTAINER
     image: mongo
     networks:
       - mongo
@@ -17,7 +17,7 @@ services:
     restart: always
   app:
     image: node:12.16.1
-    container_name: "article_api"
+    container_name: article_api
     working_dir: /home/node/app
     volumes:
       - ./:/home/node/app
