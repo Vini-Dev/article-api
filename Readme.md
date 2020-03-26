@@ -1,6 +1,6 @@
 # Article API
 
-Guide to configure the API
+Guide to configure the API. [Dashboard Link](https://github.com/Vini-Dev/article-admin)
 
 ## Enviromments variables
 
